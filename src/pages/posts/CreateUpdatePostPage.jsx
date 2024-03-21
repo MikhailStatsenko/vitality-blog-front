@@ -6,6 +6,7 @@ import {Button, Card, Form, Input, Select, Spin, Switch, Upload} from "antd";
 import TextArea from "antd/es/input/TextArea";
 import {observer} from "mobx-react-lite";
 import {InboxOutlined} from "@ant-design/icons";
+import {API_URL} from "../../http";
 
 const {Dragger} = Upload;
 
@@ -17,53 +18,26 @@ const CreateUpdatePostPage = ({ isNews = false }) => {
     const [form] = Form.useForm();
     const postTitle = Form.useWatch('title', form);
 
-    // const [courses, setCourses] = useState([]);
-    const [subjects, setSubjects] = useState([]);
-    const [postTypes, setPostTypes] = useState([]);
+    const [categories, setCategories] = useState([]);
+
     const [files, setFiles] = useState([]);
 
     const navigate = useNavigate();
 
-    // useEffect(() => {
-    //     const fetchData = async () => {
-    //         const response = await store.courses.getAll();
-    //         setCourses(response);
-    //     };
-    //     fetchData();
-    // }, [store, setCourses]);
-
-
-    const subjectsByCourse = (courseId) => {
-        const fetchData = async () => {
-            const response = await store.topics.getTopicsByCourseId(courseId);
-            setSubjects(response);
-        };
-        fetchData();
-    };
-
-    // useEffect(() => {
-    //     const fetchData = async () => {
-    //         const response = await store.subjects.getAll();
-    //         setSubjects(response);
-    //     };
-    //     if (courses.length) {
-    //         fetchData();
-    //     } else {
-    //         setSubjects([]);
-    //     }
-    // }, [store, setSubjects, courses]);
-
-    // useEffect(() => {
-    //     const fetchData = async () => {
-    //         const response = await store.postTypes.getAll();
-    //         setPostTypes(response);
-    //     };
-    //     fetchData();
-    // }, [store, setPostTypes]);
-
     const handleFileChange = ({fileList}) => {
         setFiles(fileList);
     };
+
+    useEffect(() => {
+        store.categories.getAll().then(categories => {
+                const formattedCategories = categories.map(item => ({
+                    label: item.title,
+                    value: item.id
+                }));
+                setCategories(formattedCategories);
+            }
+        )
+    }, [form, store.categories, store.posts])
 
     useEffect(() => {
         if (postId) {
@@ -72,12 +46,16 @@ const CreateUpdatePostPage = ({ isNews = false }) => {
                 form.setFieldsValue({
                     title: response?.title,
                     content: response?.content,
+                    categoryId: ({
+                        label: response.category.title,
+                        value: response.category.id
+                    }),
                     files: [
                         ...response?.attachments?.map(file => ({
                             uid: file?.id,
                             name: file?.originalName + '.' + file?.extension,
                             status: 'done',
-                            url: `http://localhost:8080/files/download/${file?.id}`
+                            url: `${API_URL}/files/download/${file?.id}`
                         }))
                     ]
                 });
@@ -85,47 +63,12 @@ const CreateUpdatePostPage = ({ isNews = false }) => {
                     uid: file?.id,
                     name: file?.originalName + '.' + file?.extension,
                     status: 'done',
-                    url: `http://localhost:8080/files/download/${file?.id}`
+                    url: `${API_URL}/files/download/${file?.id}`
                 })));
             };
             fetchData();
         }
     }, [form, postId, store.posts]);
-
-    // const [post, setPost] = useState(null);
-    // const [images, setImages] = useState([]);
-    // const [openModal, setOpenModal] = useState(false);
-
-    // useEffect(() => {
-    //     const fetchData = async () => {
-    //         const response = await store.posts.getById(postId);
-    //         setPost(response);
-    //         setImages(response?.attachments.filter(
-    //             file => file?.extension.toLowerCase() === 'png' ||
-    //                 file?.extension.toLowerCase() === 'jpg' ||
-    //                 file?.extension.toLowerCase() === 'jpeg' ||
-    //                 file?.extension.toLowerCase() === 'gif' ||
-    //                 file?.extension.toLowerCase() === 'bmp' ||
-    //                 file?.extension.toLowerCase() === 'svg' ||
-    //                 file?.extension.toLowerCase() === 'webp'
-    //         ));
-    //     };
-    //     fetchData();
-    // }, [store, setPost, postId, setImages]);
-
-    // const colors = [
-    //     'magenta',
-    //     'red',
-    //     'volcano',
-    //     'orange',
-    //     'gold',
-    //     'lime',
-    //     'green',
-    //     'cyan',
-    //     'blue',
-    //     'geekblue',
-    //     'purple'
-    // ];
 
     return (
         <PageTemplate
@@ -140,10 +83,16 @@ const CreateUpdatePostPage = ({ isNews = false }) => {
                         initialValues={{
                             title: '',
                             content: '',
+                            categoryId: '',
                             attachments: []
                         }}
                         onFinish={async (values) => {
-                            const result = await store.posts.create(values, files);
+                            let result;
+                            if (postId) {
+                                result = await store.posts.update(values, files, postId);
+                            } else {
+                                result = await store.posts.create(values, files);
+                            }
                             if (!!result) {
                                 form.resetFields();
                                 setFiles([]);
@@ -189,59 +138,29 @@ const CreateUpdatePostPage = ({ isNews = false }) => {
 
                             />
                         </Form.Item>
-                        {/*<Form.Item*/}
-                        {/*    label="Тип поста"*/}
-                        {/*    name="postTypeId"*/}
-                        {/*>*/}
-                        {/*    <Select>*/}
-                        {/*        {postTypes?.map(postType =>*/}
-                        {/*            <Select.Option key={postType.id}*/}
-                        {/*                           value={postType.id}>{postType.title}</Select.Option>*/}
-                        {/*        )}*/}
-                        {/*    </Select>*/}
-                        {/*</Form.Item>*/}
 
-                        {/*<Form.Item*/}
-                        {/*    label={'Курс'}*/}
-                        {/*    name={'courseId'}*/}
-                        {/*>*/}
-                        {/*    <Select*/}
-                        {/*        onChange={subjectsByCourse}*/}
-                        {/*        options={*/}
-                        {/*            courses?.map(course => ({*/}
-                        {/*                label: course.title,*/}
-                        {/*                value: course.id*/}
-                        {/*            }))*/}
-                        {/*        }*/}
-                        {/*    />*/}
-                        {/*</Form.Item>*/}
-
-                        {/*<Form.Item*/}
-                        {/*    label="Тема"*/}
-                        {/*    name="topicId"*/}
-                        {/*    hasFeedback*/}
-                        {/*    // Если выбран курс, обязательно выбрать тему*/}
-                        {/*    rules={[*/}
-                        {/*        ({getFieldValue}) => ({*/}
-                        {/*            validator(_, value) {*/}
-                        {/*                if (getFieldValue('courseId') && !value) {*/}
-                        {/*                    return Promise.reject('Выберите тему');*/}
-                        {/*                }*/}
-                        {/*                return Promise.resolve();*/}
-                        {/*            },*/}
-                        {/*        }),*/}
-                        {/*    ]}*/}
-                        {/*>*/}
-                        {/*    <Select*/}
-                        {/*        disabled={!subjects.length && !form.getFieldValue('courseId')}*/}
-                        {/*        options={*/}
-                        {/*            subjects?.map(t => ({*/}
-                        {/*                label: t.subject.title,*/}
-                        {/*                value: t.id*/}
-                        {/*            }))*/}
-                        {/*        }*/}
-                        {/*    />*/}
-                        {/*</Form.Item>*/}
+                        {!postId ? (
+                            <Form.Item
+                                label="Категория"
+                                name="categoryId"
+                                hasFeedback
+                                rules={[
+                                    {
+                                        required: true,
+                                        message: 'Пожалуйста, выберите категорию',
+                                    }
+                                ]}
+                            >
+                                <Select
+                                    allowClear
+                                    style={{
+                                        width: '100%',
+                                    }}
+                                    placeholder="Выберите категорию"
+                                    options={categories}
+                                />
+                            </Form.Item>
+                        ) : null}
 
                         <Form.Item
                             label="Прикрепленные файлы"
@@ -254,7 +173,6 @@ const CreateUpdatePostPage = ({ isNews = false }) => {
                                          setFiles([...files, file]);
                                          return false;
                                      }}
-                                // fileList={fileList}
                                      onChange={handleFileChange}
                                      fileList={files}
                                      onRemove={file => {
@@ -273,32 +191,6 @@ const CreateUpdatePostPage = ({ isNews = false }) => {
                                 </p>
                             </Dragger>
                         </Form.Item>
-                        <Form.Item
-                            name="isNews"
-                            initialValue={isNews}
-                        >
-                            {store.isModerator() && <Switch disabled={!store.isModerator()} />}
-                        </Form.Item>
-
-                        {/*<Form.Item*/}
-                        {/*    label="Тип поста"*/}
-                        {/*    name="postType"*/}
-                        {/*    rules={[{required: true, message: 'Выберите тип поста'}]}*/}
-                        {/*>*/}
-                        {/*</Form.Item>*/}
-                        {/*<Form.Item*/}
-                        {/*    label="Тема"*/}
-                        {/*    name="topic"*/}
-                        {/*    rules={[{required: true, message: 'Выберите тему'}]}*/}
-                        {/*>*/}
-                        {/*    <TextArea/>*/}
-                        {/*</Form.Item>*/}
-                        {/*<Form.Item*/}
-                        {/*    label="Прикрепленные файлы"*/}
-                        {/*    name="attachments"*/}
-                        {/*>*/}
-                        {/*    <TextArea/>*/}
-                        {/*</Form.Item>*/}
                         <Form.Item>
                             <Button type="dashed" htmlType="submit">
                                 {postId ? 'Сохранить' : 'Создать'}
@@ -307,144 +199,8 @@ const CreateUpdatePostPage = ({ isNews = false }) => {
                     </Form>
                 </Card>
             </Spin>
-            {/*<Modal*/}
-            {/*    open={openModal}*/}
-            {/*    onOk={() => setOpenModal(false)}*/}
-            {/*    onCancel={() => setOpenModal(false)}*/}
-            {/*    footer={[*/}
-            {/*        <Button key="back" onClick={() => setOpenModal(false)}>*/}
-            {/*            Закрыть*/}
-            {/*        </Button>,*/}
-            {/*    ]}*/}
-            {/*>*/}
-            {/*    <QRCode*/}
-            {/*        size={380}*/}
-            {/*        iconSize={90}*/}
-            {/*        className={'mx-auto'}*/}
-            {/*        value={`http://localhost:3000/posts/${post?.id}`}*/}
-            {/*        icon="https://acdn.tinkoff.ru/static/pages/files/ba002123-6b93-4af2-855e-3a33b8bc0a08.png"*/}
-            {/*    />*/}
-            {/*</Modal>*/}
-            {/*<div className={'max-w-4xl mx-auto'}>*/}
-            {/*    <Card*/}
-            {/*        actions={*/}
-            {/*            [*/}
-            {/*                <div className={'text-gray-400'}>{post?.topic?.course?.title}</div>,*/}
-            {/*                <div className={'text-gray-400'}>{post?.topic?.subject?.title}</div>,*/}
-            {/*                <div className={'text-gray-400'}>{post?.postType?.title}</div>*/}
-            {/*            ]*/}
-            {/*        }*/}
-            {/*    >*/}
-            {/*        <div className={'flex flex-col'}>*/}
-            {/*            {post?.content}*/}
-            {/*            {images.length && <Divider/>}*/}
-            {/*            <div>*/}
-            {/*                <Image.PreviewGroup>*/}
-            {/*                    {images?.map(image =>*/}
-            {/*                        (*/}
-            {/*                            <Image*/}
-            {/*                                width={200}*/}
-            {/*                                height={200}*/}
-            {/*                                className={'object-cover'}*/}
-            {/*                                src={`http://localhost:8080/files/download/${image?.id}`}*/}
-            {/*                            />*/}
-            {/*                        )*/}
-            {/*                    )}*/}
-            {/*                </Image.PreviewGroup>*/}
-
-            {/*            </div>*/}
-            {/*        </div>*/}
-            {/*    </Card>*/}
-
-
-            {/*    <h2 className={'text-xl font-bold mt-4 mb-2'}>Дополнительная информация</h2>*/}
-            {/*    <Card>*/}
-            {/*        <div className={'flex flex-row gap-2 justify-between'}>*/}
-            {/*            {post?.attachments?.length ?*/}
-            {/*                <Tree*/}
-            {/*                    showLine*/}
-            {/*                    showIcon*/}
-            {/*                    defaultExpandAll*/}
-            {/*                    selectable={false}*/}
-            {/*                    treeData={[*/}
-            {/*                        {*/}
-            {/*                            title: 'Прикрепленные файлы',*/}
-            {/*                            key: '0-0',*/}
-            {/*                            children: post?.attachments?.map(file => ({*/}
-            {/*                                // title: file?.originalName + '.' + file?.extension,*/}
-            {/*                                title: <div className={'flex flex-row gap-1 items-center'}><a*/}
-            {/*                                    className={'text-blue-600 hover:text-blue-700'}*/}
-            {/*                                    href={`http://localhost:8080/files/download/${file?.id}`}*/}
-            {/*                                    target={'_blank'}*/}
-            {/*                                    rel="noreferrer">{file?.originalName + '.' + file?.extension}</a>*/}
-            {/*                                    <div*/}
-            {/*                                        className={'text-gray-400 text-xs'}>{SizeService.formatBytes(file?.size)}</div>*/}
-            {/*                                </div>,*/}
-            {/*                                key: file?.id,*/}
-            {/*                                isLeaf: true*/}
-            {/*                            }))*/}
-            {/*                        },*/}
-            {/*                    ]*/}
-            {/*                    }*/}
-            {/*                /> :*/}
-            {/*                <div className={'text-gray-400'}>Файлы не прикреплены</div>*/}
-            {/*            }*/}
-            {/*            <div className={'flex flex-col gap-2'}>*/}
-            {/*                <div>*/}
-            {/*                    <div className={'text-gray-400'}>Автор</div>*/}
-            {/*                    <Link to={`/users/${post?.author?.id}`}>*/}
-            {/*                        <Tag color={colors[post?.author?.id % colors.length]}*/}
-            {/*                        >Дмитрий Луковников</Tag>*/}
-            {/*                    </Link>*/}
-
-            {/*                </div>*/}
-            {/*                <div>*/}
-            {/*                    <div className={'text-gray-400'}>Количество просмотров</div>*/}
-            {/*                    <Tag className={'text-gray-400'}>{post?.views}</Tag>*/}
-            {/*                </div>*/}
-            {/*            </div>*/}
-            {/*            <div className={'flex flex-col gap-2'}>*/}
-            {/*                <div>*/}
-            {/*                    <div className={'text-gray-400'}>Дата создания</div>*/}
-            {/*                    <Tag*/}
-            {/*                        className={'text-gray-400'}>{DateTimeService.convertBackDateToString(post?.createdAt)}</Tag>*/}
-            {/*                </div>*/}
-            {/*                <div>*/}
-            {/*                    <div className={'text-gray-400'}>Дата обновления</div>*/}
-            {/*                    <Tag*/}
-            {/*                        className={'text-gray-400'}>{DateTimeService.convertBackDateToString(post?.updatedAt)}</Tag>*/}
-            {/*                </div>*/}
-            {/*            </div>*/}
-            {/*        </div>*/}
-            {/*    </Card>*/}
-
-            {/*    <h2 className={'text-xl font-bold mt-4 mb-2'}>Комментарии</h2>*/}
-            {/*    <div className={'flex flex-col gap-2'}>*/}
-            {/*        {post?.comments?.map(comment =>*/}
-            {/*            <Badge.Ribbon text={DateTimeService.convertBackDateToString(comment?.createdAt)}*/}
-            {/*                          color="blue">*/}
-            {/*                <Card>{comment?.content}</Card>*/}
-            {/*            </Badge.Ribbon>*/}
-            {/*        )}*/}
-            {/*    </div>*/}
-
-            {/*    /!*  Форма отправки комментарии  *!/*/}
-            {/*    <div className={'flex flex-col gap-2'}>*/}
-            {/*        <h2 className={'text-xl font-bold mt-4 mb-2'}>Добавить комментарий</h2>*/}
-            {/*        <Card>*/}
-            {/*            <form className={'flex flex-col gap-2'}>*/}
-            {/*                <TextArea name="content" id="content"*/}
-            {/*                          cols="30" rows="10"/>*/}
-            {/*                <Button type="dashed">Отправить</Button>*/}
-            {/*            </form>*/}
-            {/*        </Card>*/}
-            {/*    </div>*/}
-
-
-            {/*</div>*/}
         </PageTemplate>
-    )
-        ;
+    );
 };
 
 export default observer(CreateUpdatePostPage);

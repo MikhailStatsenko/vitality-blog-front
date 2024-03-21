@@ -15,7 +15,6 @@ export default class PostStore {
 
     getPostsByFilter = async (filter) => {
         try {
-            // console.log(filter);
             const json = JSON.stringify(filter);
             const response = await $api.post('/posts/filter', json);
             return response.data;
@@ -38,9 +37,10 @@ export default class PostStore {
         try {
             const formData = new FormData();
             formData.append('title', values.title);
-            formData.append('isNews', values.isNews);
 
             if (values.content) formData.append('content', values.content);
+
+            if (values.categoryId) formData.append('categoryId', values.categoryId);
             files.forEach((file) => {
                 formData.append('attachments', file.originFileObj);
             });
@@ -58,6 +58,30 @@ export default class PostStore {
         }
     }
 
+    update = async (values, files, postId) => {
+        this.loading = true;
+        try {
+            const formData = new FormData();
+            formData.append('title', values.title);
+
+            if (values.content) formData.append('content', values.content);
+            files.forEach((file) => {
+                formData.append('attachments', file.originFileObj);
+            });
+            const response = await $api.put(`/posts/${postId}`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            message.success('Пост успешно обновлен');
+            return response.data;
+        } catch (e) {
+            this.rootStore.httpError(e);
+        } finally {
+            this.loading = false;
+        }
+    }
+
     delete = async (postId) => {
         try {
             await $api.delete(`/posts/${postId}`);
@@ -67,5 +91,27 @@ export default class PostStore {
             this.rootStore.httpError(e);
         }
         return false;
+    }
+
+    like = async (postId) => {
+        this.loading = true;
+        try {
+            await $api.post(`/posts/${postId}/like`);
+        } catch (e) {
+            this.rootStore.httpError(e);
+        } finally {
+            this.loading = false;
+        }
+    }
+
+    unlike = async (postId) => {
+        this.loading = true;
+        try {
+            await $api.post(`/posts/${postId}/unlike`);
+        } catch (e) {
+            this.rootStore.httpError(e);
+        } finally {
+            this.loading = false;
+        }
     }
 }

@@ -6,7 +6,7 @@ import {Badge, Button, Card, Checkbox, Divider, Form, Image, Modal, Pagination, 
 import DateTimeService from "../../service/DateTimeService";
 import TextArea from "antd/es/input/TextArea";
 import SizeService from "../../service/SizeService";
-import {DeleteOutlined} from "@ant-design/icons";
+import {DeleteOutlined, EditOutlined, HeartFilled, HeartOutlined} from "@ant-design/icons";
 
 
 const PostPage = () => {
@@ -22,6 +22,8 @@ const PostPage = () => {
     const [updteTrigger, setUpdateTrigger] = useState(false);
     const [modal, contextHolder] = Modal.useModal();
     const [deletePostModal, contextHolderDeletePostModal] = Modal.useModal();
+    const [isLiked, setIsLiked] = useState(false);
+    const [iconColor, setIconColor] = useState("white");
 
 
     const [form] = Form.useForm();
@@ -54,6 +56,19 @@ const PostPage = () => {
         fetchData();
     }, [store, setComments, postId, page, pageSize, setTotalComments, updteTrigger]);
 
+    const handleLikeToggle = async (event) => {
+        setIsLiked(!isLiked);
+        setIconColor(isLiked ? "white" : "#ff4d4f" );
+
+        const postId = post.id;
+        if (!isLiked) {
+            await store.posts.like(postId);
+        } else {
+            await  store.posts.unlike(postId);
+        }
+        event.stopPropagation();
+    }
+
     const confirmDelete = (index) => {
         modal.confirm({
             title: 'Вы уверены, что хотите удалить комментарий?',
@@ -81,7 +96,7 @@ const PostPage = () => {
             cancelText: 'Нет',
             onOk: async () => {
                 if (await store.posts.delete(postId)) {
-                    navigate('/posts');
+                    navigate('/');
                 }
             },
         })
@@ -105,34 +120,22 @@ const PostPage = () => {
         <PageTemplate
             title={<div>
                 {post?.title}
-                <Button className={'ml-2'} onClick={() => setOpenModal(true)}>QR</Button>
             </div>}>
-            <Modal
-                open={openModal}
-                onOk={() => setOpenModal(false)}
-                onCancel={() => setOpenModal(false)}
-                footer={[
-                    <Button key="back" onClick={() => setOpenModal(false)}>
-                        Закрыть
-                    </Button>,
-                ]}
-            >
-                <QRCode
-                    size={380}
-                    iconSize={90}
-                    className={'mx-auto'}
-                    value={`http://localhost:3000/posts/${post?.id}`}
-                    // value={`https://www.tinkoff.ru/baf/8WTHVC5VRvQ`}
-                    icon="https://acdn.tinkoff.ru/static/pages/files/ba002123-6b93-4af2-855e-3a33b8bc0a08.png"
-                />
-            </Modal>
             <div className={'max-w-4xl mx-auto'}>
                 <Card
                     actions={
                         [
-                            <div className={'text-gray-400'}>{post?.topic?.course?.title}</div>,
-                            <div className={'text-gray-400'}>{post?.topic?.subject?.title}</div>,
-                            <div className={'text-gray-400'}>{post?.postType?.title}</div>,
+                            <div className={'text-gray-400'}>{post?.category?.title}</div>,
+
+                            (post?.author?.id === store.user?.id) &&
+                            <Button
+                                onClick={() => {
+                                    navigate(`/posts/update/${post?.id}`);
+                                }}
+                                size={"small"}
+                                icon={<EditOutlined />}
+                            >Изменить</Button>,
+
                             (store.isAdmin() || post?.author?.id === store.user?.id) &&
                             <Button
                                 onClick={() => {
@@ -141,14 +144,19 @@ const PostPage = () => {
                                 danger
                                 size={"small"}
                                 icon={<DeleteOutlined/>}
-                            >Удалить</Button>
+                            >Удалить</Button>,
 
+                            <Tag
+                                style={{ color: iconColor }}
+                                onClick={handleLikeToggle}
+                                type={isLiked ? "primary" : "default"}
+                                icon={isLiked ? <HeartFilled /> : <HeartOutlined />}
+                            />
                         ]
                     }
                 >
                     <div className={'flex flex-col'}>
                         {post?.content}
-                        {images?.length && <Divider/>}
                         <div>
                             <Image.PreviewGroup>
                                 {images?.map(image =>
@@ -210,7 +218,8 @@ const PostPage = () => {
                                 </Link>
                             </div>
                             <div>
-                                <div className={'text-gray-400'}>Количество просмотров</div>
+                                {/*TODO: нет эндпоинта для получения лайков на посте*/}
+                                <div className={'text-gray-400'}>Количество лайков</div>
                                 <Tag className={'text-gray-400'}>{post?.views}</Tag>
                             </div>
                         </div>
@@ -309,15 +318,6 @@ const PostPage = () => {
                                 </div>}
                                 actions={[
                                     null,
-                                    // store.isModerator() && <Button
-                                    //     onClick={async () => {
-                                    //         // await store.comments.update(comment?.id, {isDeleted: true});
-                                    //         // setUpdateTrigger(!updteTrigger);
-                                    //         // setPage(1);
-                                    //     }}
-                                    //     icon={<UserOutlined/>}
-                                    // >Перейти к пользователю</Button>
-                                    // ,
                                     (store.isModerator() || comment?.author?.id === store.user?.id || post?.author?.id === store.user?.id) &&
                                     <Button
                                         onClick={() => {

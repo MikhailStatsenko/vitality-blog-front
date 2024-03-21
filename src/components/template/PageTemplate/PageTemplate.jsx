@@ -4,7 +4,7 @@ import {Link} from "react-router-dom";
 import {Button, Dropdown} from "antd";
 import {Context} from "../../../index";
 import {observer} from "mobx-react-lite";
-import {ApiOutlined, SettingOutlined, TeamOutlined, UserOutlined} from "@ant-design/icons";
+import {ApiOutlined, FolderOpenOutlined, SettingOutlined, TeamOutlined, UserOutlined} from "@ant-design/icons";
 
 const PageTemplate = ({children, title}) => {
     const {store} = useContext(Context);
@@ -24,7 +24,6 @@ const PageTemplate = ({children, title}) => {
             }
         ]
 
-
         if (store.isAdmin()) {
 
         }
@@ -38,12 +37,16 @@ const PageTemplate = ({children, title}) => {
             })
         }
 
-        console.log(store.isSuperAdmin)
         if (store.isAdmin()) {
             tmp.push({
                 icon: <ApiOutlined/>,
                 label: <Link to={"/system-properties"}>Системные настройки</Link>
-            }, {
+            })
+            tmp.push({
+                icon: <FolderOpenOutlined />,
+                label: <Link to={"/categories"}>Категории</Link>
+            },
+            {
                 type: "divider"
             })
         }
@@ -56,31 +59,6 @@ const PageTemplate = ({children, title}) => {
 
         setItems(tmp)
     }, [store, setItems])
-
-    // const items = [
-    //     {
-    //         label: <Link to={"/profile"}>Профиль</Link>
-    //     },
-    //     {
-    //         label: "Настройки",
-    //
-    //     },
-    //     {
-    //         type: "divider"
-    //     },
-    //
-    //     {
-    //         label: <span
-    //             onClick={() => {
-    //                 store.logout()
-    //             }}
-    //         >Выйти</span>,
-    //         danger: true,
-    //
-    //     }
-    // ]
-    //
-    // if ()
 
     return (
         <div className={st.pageContainer}>
@@ -99,30 +77,8 @@ const PageTemplate = ({children, title}) => {
                     </div>
                     <div className={st.goPosts}>
 
-                        <Link to={"/securities"}>
-                            <Button type={"dashed"}>
-                                Ценные бумаги
-                            </Button>
-                        </Link>
-                        <Link to={"/news"}>
-                            <Button type={"dashed"}>
-                                Новости и аналитика
-                            </Button>
-                        </Link>
-
-                        <Link to={"/posts"}>
-                            <Button type={"dashed"}>
-                                Talk
-                            </Button>
-                        </Link>
-
-
-                        {/*<Button type={"dashed"} danger onClick={store.logout}>*/}
-                        {/*    Выйти*/}
-                        {/*</Button>*/}
                         <Dropdown
                             placement={"bottomRight"}
-                            // trigger={"click"}
                             overlayStyle={{
                                 width: "220px",
                                 paddingTop: "10px",

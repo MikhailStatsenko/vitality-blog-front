@@ -196,11 +196,6 @@ const SystemProperties = () => {
 
 
             <div className={'max-w-7xl mx-auto'}>
-                {/*<div className={'flex flex-col gap-4'}>*/}
-                {/*    <Card title={''}>*/}
-                {/*    </Card>*/}
-                {/*</div>*/}
-
                 <Table
                     dataSource={properties}
                     columns={[

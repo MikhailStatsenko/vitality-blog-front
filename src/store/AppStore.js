@@ -5,8 +5,7 @@ import CommentStore from "./modules/CommentStore";
 import {message, notification} from "antd";
 import $api from "../http";
 import SystemStore from "./modules/SystemStore";
-import SecurityStore from "./modules/SecurityStore";
-import SecurityTypeStore from "./modules/SecurityTypeStore";
+import CategoryStore from "./modules/CategoryStore";
 
 export default class AppStore {
 
@@ -18,8 +17,7 @@ export default class AppStore {
     comments = new CommentStore(this);
     // subjects = new SubjectStore(this);
     system = new SystemStore(this);
-    security = new SecurityStore(this)
-    securityType = new SecurityTypeStore(this)
+    categories = new CategoryStore(this);
     userState = null;
     isAuthState = false;
     isSuperAdminState = null;
@@ -55,6 +53,7 @@ export default class AppStore {
                 postTypes: false,
                 posts: false,
                 users: false,
+                categories: false,
                 comments: false,
                 subjects: false,
                 system: false
@@ -120,15 +119,7 @@ export default class AppStore {
                             description: e.response.data?.detail,
                         }, 10);
                     }
-
-                    // notification.error({
-                    //     message: e.response.data?.title,
-                    //     description: e.response.data?.detail,
-                    // });
                     break;
-                // case 401:
-                //     message.error('Необходимо авторизоваться');
-                //     break;
                 case 403:
                     message.error('Недостаточно прав');
                     break;
@@ -147,7 +138,6 @@ export default class AppStore {
     }
 
     isAdmin(): boolean {
-        // return true;
         return this.user?.role === 'ROLE_ADMIN';
     }
 

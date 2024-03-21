@@ -218,44 +218,6 @@ const UsersTablePage = () => {
             },
         });
     };
-    // const [selectedModalRole, setSelectedModalRole] = useState(null);
-
-    // const changeUserRole = (userId, username) => {
-    //
-    //     Modal.confirm({
-    //         title: 'Какую роль Вы желаете выдать пользователю "' + username + '"?',
-    //         icon: <ExclamationCircleOutlined />,
-    //         content: (
-    //             <Form layout="vertical" style={{ width: 350 }}>
-    //                 <Card style={{ border: 'none' }}>
-    //                     <Space wrap>
-    //                         <Form.Item label={"Роль"} required={true}>
-    //                             <Select
-    //                                 style={{ width: 180 }}
-    //                                 onChange={value => setSelectedModalRole(value)}
-    //                                 value={selectedModalRole}
-    //                             >
-    //                                 {roles?.map((role, index) => (
-    //                                     <Select.Option key={index} value={role}>
-    //                                         {role}
-    //                                     </Select.Option>
-    //                                 ))}
-    //                             </Select>
-    //                         </Form.Item>
-    //                     </Space>
-    //                 </Card>
-    //             </Form>
-    //         ),
-    //         okText: 'Выдать роль',
-    //         okType: 'danger',
-    //         cancelText: 'Отмена',
-    //         onOk() {
-    //             store.users.changeRole(userId, selectedModalRole).then(async () => {
-    //                 await updateData();
-    //             });
-    //         },
-    //     });
-    // };
 
     useEffect(() => {
         if (!store.isModerator()) {
@@ -313,7 +275,6 @@ const UsersTablePage = () => {
                                rules={[{required: true}]}
                     >
                         <Select
-                            // style={{width: 100}}
                             options={[
                                 {
                                     label: <Tag color="red">Администратор</Tag>,
@@ -519,12 +480,6 @@ const UsersTablePage = () => {
                         }, {
                             title: "Почта", dataIndex: "email", key: "email"
                         },
-                            //     {
-                            //     title: "Дата окончания бана",
-                            //     dataIndex: "bannedAt",
-                            //     key: "bannedAt",
-                            //     render: (bannedAt) => (DateTimeService.convertBackDateToString(bannedAt))
-                            // }
                             {
                                 title: "Забанен",
                                 dataIndex: "bannedAt",
@@ -532,7 +487,6 @@ const UsersTablePage = () => {
                                 // Если дата не установлена либо она меньше текущей, то пользователь не забанен
                                 // Data хранится в unix timestamp
                                 render: (bannedAt) => {
-                                    // Ко
                                     if (bannedAt === null || DateTimeService.convertBackDateToDate(bannedAt) < new Date()) {
                                         return <Tag color="green">Нет</Tag>
                                     } else {
@@ -553,13 +507,9 @@ const UsersTablePage = () => {
                                     // Провреяем забанен ли, если да, то вычисляем сколько осталось до конца бана
                                     if (bannedAt !== null && DateTimeService.convertBackDateToDate(bannedAt) > new Date()) {
                                         const diff = DateTimeService.convertBackDateToDate(bannedAt) - new Date();
-                                        // const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                                        // const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-                                        // const minutes = Math.floor((diff / (1000 * 60)) % 60);
                                         return <Countdown
                                             valueStyle={{fontSize: 14}}
                                             value={(DateTimeService.convertBackDateToDate(bannedAt)) + 10 * 1000}
-                                            // value={DateTimeService.convertBackDateToDate(DateTimeService.convertBackDateToDate(bannedAt) - new Date()) + 10 * 1000}
                                         />
 
                                     } else {
